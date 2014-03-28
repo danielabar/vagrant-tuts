@@ -305,7 +305,7 @@ Add meta-parameter ```before``` to one of file resources:
       content => 'one',
       before  => File['two'],
     }
-    ```
+  ```
 
 Back in vm, delete files one and two, then run ```puppet apply files.pp```
 
