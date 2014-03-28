@@ -47,7 +47,7 @@ Imports base box and does setup for virtual machine.
 After it starts, check VirtualBox Manager - can see machine listed and running.
 By default, vagrant vm's are run in headless mode, which means there is no window to interact with it directly
 
-### Shut down Virtual Machine - Option 1: Suspend
+### Shut down VM - Option 1: Suspend
   ```bash
   vagrant suspend
   ```
@@ -60,7 +60,7 @@ Depending on how big the vm is, this can be very resource intensive.
   vagrant resume
   ```
 
-### Shut down Virtual Machine - Option 2: Graceful shutdown
+### Shut down VM - Option 2: Graceful shutdown
   ```
   vagrant halt
   ```
@@ -78,7 +78,7 @@ This means vm is still using up host hard-drive space, even if vm is not running
   ```
 This is required if changes were made to Vagrantfile
 
-# Shut down Virtual Machine - Option 3: Destroy
+### Shut down VM - Option 3: Destroy
   ```bash
   vagrant destroy
   ```
@@ -125,7 +125,7 @@ Should see Hi printed on page
 ### Kill the Python server
 Ctrl+C
 
-### Leave vm
+### Leave VM
   ```bash
   exit
   ```
@@ -158,89 +158,108 @@ In above example, sibling data folder on host machine will be synced to /vagrant
 Preparing vm with software and configuration that it needs before it can be used.
 For simple requirements only, can provision with shell scripts.
 
-Provisioning with Shell Scripts Method 1 - Inline
-config.vm.provision :shell, inline: "echo Hello World!"
-vagrant up
-If get message about machine already provisioned, run: vagrant provision
-don't worry about message: stdin: is not a tty
+### Provisioning with Shell Scripts Method 1 - Inline
+Edit Vagrantfile as follows
+  ```ruby
+  config.vm.provision :shell, inline: "echo Hello World!"
+  ```
 
-If make changes to provisioning, don't need to restart vm, just run:
-vagrant provision
+To startup an already provisioned machine with new provision config, run ```vagrant provision```
 
-Provisioning with Shell Scripts Method 2 - Path
-config.vm.provision :shell, path: './provision.sh'
+### Provisioning with Shell Scripts Method 2 - Path
+Edit Vagrantfile as follows
+  ```ruby
+  config.vm.provision :shell, path: './provision.sh'
+  ```
 
-Create a file provision.sh in same dir as Vagrant file and edit:
-echo "This is our provisioning script"
-apt-get clean
-apt-get update
-apt-get install vim -y
+Create a file ```provision.sh``` in same dir as Vagrant file and edit:
+  ```bash
+  echo "This is our provisioning script"
+  apt-get clean
+  apt-get update
+  apt-get install vim -y
+  ```
 
-To verify vim was installed
-vagrant ssh
-which vim
+Then run ```vagrant provision``` to make this script run.
 
-Provisioning with Puppet
-Puppet used for actual servers as well as configuring vm's
-Don't need to install Enterprise version, use OSS
-Note that vagrant already has a version of puppet installed:
-vagrant ssh
-which puppet
-  /opt/vagrant_ruby/bin/puppet
-puppet --version
-  2.7.19
-If you're on a vm that doesn't come with puppet, run:
-apt-get install puppet
+To verify vim was installed:
+  ```bash
+  vagrant ssh
+  which vim
+  vim --version
+  ```
 
-Puppet Resources
-- describes a single unit of configuration
-- eg: file, user, service, etc.
+### Provisioning with Puppet
+Puppet used for actual servers as well as configuring vm's.
+Don't need to install Enterprise version, use OSS.
+Vagrant already has a version of puppet installed:
+  ```bash
+  vagrant ssh
+  which puppet      # /opt/vagrant_ruby/bin/puppet
+  puppet --version  # 2.7.19
+  ```
+If you're on a vm that doesn't come with puppet, run ```apt-get install puppet```
+
+### Puppet Resources
+- describes a single unit of configuration, eg: file, user, service, etc.
 - Puppet has some built in resources, and you can build your own
-- resource is NOT a set of instructions, description of state of part of the system
-- Puppet scripts use resources to check if system is already in that state,
-if yes, will not re-install packages or have other side effects.
+- resource is NOT a set of instructions, it's a description of state of part of the system
+- Puppet scripts use resources to check if system is already in that state, if yes, will not re-install packages or have other side effects.
 
-To check state of a resource
-puppet resource user
-- lists all users in system and prints out their current configuration
+### To check state of a resource
+Run this from inside the vm to list all users in system and prints out their current configuration:
+  ```bash
+  puppet resource user
+  ```
 
-Check state of a particular user resource
-puppet resource user vagrant
+### Check state of a particular user resource
+  ```bash
+  puppet resource user vagrant
+  ```
 
-Check state of a package resource
-puppet resource package vim
+### Check state of a package resource
+  ```bash
+  puppet resource package vim
+  ```
 
-Create a puppet script in same folder as Vagrantfile: vim.pp
-exec { "apt-update":
-  command => "/usr/bin/apt-get update"
-}
-Exec["apt-update"] -> Package <| |>
-package { 'vim':
-  name   => 'vim',
-  ensure => 'installed',
-}
+Create a puppet script in same folder as Vagrantfile ```vim.pp``` and edit as follows:
+  ```ruby
+  exec { "apt-update":
+    command => "/usr/bin/apt-get update"
+  }
+  Exec["apt-update"] -> Package <| |>
+  package { 'vim':
+    name   => 'vim',
+    ensure => 'installed',
+  }
+  ```
 
-- puppet script is called: puppet manifest
-- if don't explicitly declare name property, first token after package becomes the name
-- by convention, line up the arrows, whitespace doesn't matter
-- by convention, leave trailing comma after last option, so it's easy to add more stuff
+- Puppet script is called: puppet manifest.
+- If don't explicitly declare name property, first token after package becomes the name.
+- By convention, line up the arrows, whitespace doesn't matter.
+- By convention, leave trailing comma after last option, so it's easy to add more properties later.
 
-After saving file: vagrant ssh
-cd /vagrant
-
-Run the puppet manifest
-puppet apply vim.pp
-(can also leave off 'apply' option because that's the default action)
-- will get err about not being root, fix it with
-sudo puppet apply vim.pp
+After saving file, run the puppet manifest from WITHIN the vm:
+  ```bash
+  vagrant ssh
+  cd /vagrant
+  sudo puppet apply vim.pp
+  ```
+Can also leave off ```apply``` option because that's the default action
 
 Check status of vim package resource:
-puppet resource package vim
-package { 'vim':
-  ensure => '2:7.3.429-2ubuntu2.1',
-}
+  ```bash
+  puppet resource package vim
+  ```
 
-Other Puppet Resources
+Should see something like:
+  ```ruby
+  package { 'vim':
+    ensure => '2:7.3.429-2ubuntu2.1',
+  }
+  ```
+
+### Other Puppet Resources
 - file: manages file
 - package: manages packages
 - service: manages services running on the node
@@ -251,36 +270,43 @@ Other Puppet Resources
 - exec: running arbitary command
 - cron: managing cron jobs
 
-Puppet Core Types Cheat Sheet
+### Puppet Core Types Cheat Sheet
 http://docs.puppetlabs.com/puppet_core_types_cheatsheet.pdf
 
-Puppet Docs Resource Types
+### Puppet Docs Resource Types
 http://docs.puppetlabs.com/references/latest/type.html
 
-Putting Resources in Order
-- puppet is not procedural
-- resources may not be installed in the order in which they are declared
+### Putting Resources in Order
+- Puppet is not procedural.
+- Resources may not be installed in the order in which they are declared
 
-create files.pp
-file { 'one':
-    path  => '/vagrant/one',
-    content => 'one',
-  }
+To demonstrate the ordering issue, create another Puppet manifest file ```files.pp``` and edit as follows:
+  ```ruby
+  file { 'one':
+      path  => '/vagrant/one',
+      content => 'one',
+    }
 
-file { 'two':
-    path  => '/vagrant/two',
-    content => 'two',
-  }
+  file { 'two':
+      path  => '/vagrant/two',
+      content => 'two',
+    }
+  ```
 
-In vagrant vm, run
-puppet apply files.pp
+In vagrant vm, run ```puppet apply files.pp```
 - file two may be created before one
 - how to ensure one gets created first?
 
-Meta-parameter
-- add to one of file resources, example:
-file { 'one':
-    path  => '/vagrant/one',
-    content => 'one',
-    before  => File['two'],
-  }
+### Meta-parameter
+Add meta-parameter ```before``` to one of file resources:
+  ```ruby
+  file { 'one':
+      path  => '/vagrant/one',
+      content => 'one',
+      before  => File['two'],
+    }
+    ```
+
+Back in vm, delete files one and two, then run ```puppet apply files.pp```
+
+This time, file one should be created before file two.
