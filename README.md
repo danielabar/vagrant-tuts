@@ -340,6 +340,70 @@ Add meta-parameter ```before``` to one of file resources:
     }
   ```
 
+Notice capitalization of File in metaparameter. The only place resource names should be lower case is in declarations.
+
 Back in vm, delete files one and two, then run ```puppet apply files.pp```
 
 This time, file one should be created before file two.
+
+If one file depends on another for its content, MUST define ordering:
+  ```ruby
+  file { 'one':
+      path    => '/vagrant/one',
+      content => 'one',
+      before  => File['two'],
+    }
+
+  file { 'two':
+      path    => '/vagrant/two',
+      source  => '/vagrant/one',
+    }
+  ```
+Can also define dependency relationship in other direction using ```require```
+```ruby
+  file { 'one':
+      path    => '/vagrant/one',
+      content => 'one',
+      #before  => File['two'],
+    }
+
+  file { 'two':
+      path    => '/vagrant/two',
+      source  => '/vagrant/one',
+      require => File['one']
+    }
+  ```
+
+Another approach to ordering resources: Hierarchy
+  ```ruby
+  file { 'one':
+      path    => '/vagrant/one',
+      content => 'one',
+    }
+
+  file { 'two':
+      path    => '/vagrant/two',
+      source  => '/vagrant/one',
+    }
+
+  File['one'] -> File['two']
+  ```
+
+Arrow pointing right means resource on left must be created BEFORE resource on right.
+
+Hierarchy arrow can also point in other direction:
+  ```ruby
+  file { 'one':
+      path    => '/vagrant/one',
+      content => 'one',
+    }
+
+  file { 'two':
+      path    => '/vagrant/two',
+      source  => '/vagrant/one',
+    }
+
+  File['two'] <- File['one']
+  ```
+
+Arrow pointing left means resource on right must be created BEFORE resource on left.
