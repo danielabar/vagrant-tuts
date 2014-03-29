@@ -407,3 +407,71 @@ Hierarchy arrow can also point in other direction:
   ```
 
 Arrow pointing left means resource on right must be created BEFORE resource on left.
+
+### Writing a Complete Puppet Manifest
+
+Start by specifying puppet as provisioner in Vagrantfile:
+  ```ruby
+  config.vm.provision :puppet
+  ```
+
+By default, when vagrant sees ```puppet``` as provisioner, will look for ```manifests``` dir, and ```default.pp``` file in that dir.
+This will contain the script that will configure the vm when ```vagrant up``` is run.
+
+Create file default.pp:
+  ```ruby
+    package { 'apache2':
+    ensure  => 'installed',
+  }
+
+  file { 'site-config':
+    path    => '/etc/apache2/sites-enabled/000-default',
+    source  => '/vagrant/site-config',
+    require => Package['apache2']
+  }
+
+  service { 'apache2':
+    ensure      => 'running',
+    hasrestart  => true,
+    subscribe   => File['site-config'],
+  }
+  ```
+
+* File ```site-config``` comes with apache installation, but we'll overwrite with custom config
+* Rather than writing the actual contents in the manifest, point to a source file
+* Path  ```/vagrant/site-config``` refers path on vm, not host
+* Apache package must be installed BEFORE this file can be written
+* Need to restart Apache so that changes to site-config can take effect
+* This is achieved through service resource, subscribing to site-config changes
+* Setting hasrestart tells it no need to stop and start, simply call restart
+
+Create file site-config for Apache configuration:
+  ```
+  <VirtualHost *:80>
+    DocumentRoot /vagrant
+    <Directory /vagrant>
+      Options Indexes FollowSymLinks MultiViews
+      AllowOverride None
+      Order allow,deny
+      allow from all
+    </Directory>
+  </VirtualHost>
+  ```
+
+Apache will serve ```/vagrant``` directory on port 80.
+
+Recall port 80 on vm is forwarded to port 8080 on host via following config in Vagrantfile:
+  ```ruby
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+  ```
+
+We never have to ssh into vm to do anything.
+All installation and configuration is done via Puppet manifest.
+Since ```/vagrant``` folder on vm is synced with ```firstVM``` on host,
+can edit ```index.html``` on host and have changes refreshed in vm.
+
+package/file/service is very common configuration pattern in Puppet.
+1. Install a package
+1. Configure the package
+1. Restart the service
+
