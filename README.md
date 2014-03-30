@@ -40,6 +40,8 @@ For this course, Virtual Box is used as the Vagrant provider.
 - [Puppet Docs Resource Types](#puppet-docs-resource-types)
 - [Putting Resources in Order](#putting-resources-in-order)
 - [Meta-parameter](#meta-parameter)
+- [Writing a Complete Puppet Manifest](#writing-a-complete-puppet-manifest)
+- [Variables and Conditionals](#variables-and-conditionals)
 
 ### Add a new box to collection of vagrant boxes
 vagrant box add <name> <location>
@@ -47,7 +49,7 @@ vagrant box add <name> <location>
   vagrant box add precise32 http://files.vagrantup.com/precise32.box
   ```
 
-More boxes available [here](www.vagrantboxes.es)
+More boxes available [here](www.vagrantbox.es)
 
 ### List available boxes on local system
   ```bash
@@ -475,3 +477,46 @@ package/file/service is very common configuration pattern in Puppet.
 1. Configure the package
 1. Restart the service
 
+### Variables and Conditionals
+Make the default.pp manifest support two different virtual machines, one running Ubuntu, and one running CentOS.
+
+Edit default.pp manifest file, add ```case``` statement to switch on ```$operatingsystem``` variable.
+In Puppet, variable names start with ```$```.
+Apache package name and config file location are different on centos and ubuntu.
+  ```ruby
+  case $operatingsystem {
+    centos: {
+      $apache = "httpd"
+      $configfile = "/etc/httpd/conf.d/vhost.conf"
+    }
+    ubuntu: {
+      $apache = "apache2"
+      $configfile = "/etc/apache2/sites-enabled/000-default"
+    }
+  }
+  ```
+
+Edit package, file, and service resources to use variable names.
+See [manifest](firstVM/default.pp) for detailed changes.
+
+Add centos vm:
+  ```bash
+  vagrant box add centos6.3 https://dl.dropbox.com/sh/9rldlpj3cmdtntc/chqwU6EYaZ/centos-63-32bit-puppet.box
+  mkdir centosVM
+  cd centosVM
+  vagrant init centos6.3
+  cp ../firstVM/site-config .
+  vagrant plugin install vagrant-vbguest
+  vagrant up
+  ```
+
+Edit the centos Vagrantfile:
+  ```ruby
+  # Use different port on host machine so both ubuntu and centos can run at the same time on this host
+  config.vm.network "forwarded_port", guest: 80, host: 8081
+
+  # Use the manifest file from ubuntu vm so we don't have to copy it
+  config.vm.provision :puppet do |puppet|
+    puppet.manifests_path = "../firstVM/manifests"
+  end
+  ```
