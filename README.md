@@ -42,6 +42,8 @@ For this course, Virtual Box is used as the Vagrant provider.
 - [Meta-parameter](#meta-parameter)
 - [Writing a Complete Puppet Manifest](#writing-a-complete-puppet-manifest)
 - [Variables and Conditionals](#variables-and-conditionals)
+- [Facter](#facter)
+- [Create custom facts](#create-custom-facts)
 
 ### Add a new box to collection of vagrant boxes
 vagrant box add <name> <location>
@@ -520,3 +522,24 @@ Edit the centos Vagrantfile:
     puppet.manifests_path = "../firstVM/manifests"
   end
   ```
+
+### Facter
+* Facter is Puppet's cross platform profiling library.
+* It's job is to discover different facts about the operating system its running on.
+* Those facts can then be used as variables in the Puppet manifest file.
+* List all the facts by ssh into box, then run at command line ```facter```
+* List just one fact by variable name ```factor operatingsystem```
+* ```factor is_virtual``` useful for manifest that performs different actions based on virtual vs physical machine
+
+### Create custom facts
+Defined in Vagrantfile, in provision block, for example:
+  ```ruby
+  config.vm.provision :puppet
+    puppet.facter = {
+      "key"             => "value",
+      "database_server" => "included"
+    }
+  end
+  ```
+
+Now ```$key``` and ```$database_server``` are available in puppet mannifest.
