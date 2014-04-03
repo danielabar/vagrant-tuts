@@ -13,10 +13,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "precise32"
 
   # config.vm.provision :shell, path: './provision.sh'
-  config.vm.provision :puppet
+  config.vm.provision :puppet do |puppet|
     puppet.facter = {
       "key"             => "value",
-      "database_server" => "included"
+      "database_server" => "included",
     }
   end
 

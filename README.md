@@ -532,12 +532,12 @@ Edit the centos Vagrantfile:
 * ```factor is_virtual``` useful for manifest that performs different actions based on virtual vs physical machine
 
 ### Create custom facts
-Defined in Vagrantfile, in provision block, for example:
+Defined in Vagrantfile, add provision block, for example:
   ```ruby
   config.vm.provision :puppet
     puppet.facter = {
       "key"             => "value",
-      "database_server" => "included"
+      "database_server" => "included",
     }
   end
   ```
