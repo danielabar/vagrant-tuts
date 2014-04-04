@@ -44,6 +44,7 @@ For this course, Virtual Box is used as the Vagrant provider.
 - [Variables and Conditionals](#variables-and-conditionals)
 - [Facter](#facter)
 - [Create custom facts](#create-custom-facts)
+- [Puppet Classes](#puppet-classes)
 
 ### Add a new box to collection of vagrant boxes
 vagrant box add <name> <location>
@@ -543,3 +544,20 @@ Defined in Vagrantfile, add provision block, for example:
   ```
 
 Now ```$key``` and ```$database_server``` are available in puppet mannifest.
+
+### Puppet Classes
+Encapsulate code to prevent manifest files from getting too big.
+Not like object oriented classes. Example, wrap all of code in ```default.pp``` in class statement:
+  ```ruby
+  class webserver {
+    # puppet stuff here
+  }
+  ```
+
+Classes are not run by default. Need to tell vagrant to run it.
+
+Move contents of ```default.pp``` to new file ```webserver.pp```.
+
+One way to tell vagrant to run the class is to define it as a resource in ```default.pp```:
+  ```ruby
+  class { "webserver": }
