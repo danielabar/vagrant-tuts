@@ -1,4 +1,4 @@
-class webserver {
+class webserver ($message = "Hello World") {
 
   case $operatingsystem {
     centos: {
@@ -41,7 +41,7 @@ class webserver {
   # Wrap variable name in curly braces for string interpolation
   # String must be in double quotes for interpolation to work
   file { '/vagrant/index.html':
-    content     => "<h1> Vagrant + Puppet + ${apache} (${operatingsystem})</h1>",
+    content     => "<h1> Vagrant + Puppet + ${apache} (${operatingsystem})</h1> <p>${message}</p>",
   }
 
   # On CentOS, iptables service prevents port forwarding, so stop it

@@ -1,6 +1,6 @@
 # Tuts Plus - Virtual Machines with Vagrant and Puppet
 
-Course notes and exercises from [Tuts+ Premium](https://tutsplus.com) course [Cleaner Code with CoffeeScript](https://tutsplus.com/course/virtual-machines-with-vagrant-and-puppet/)
+Course notes and exercises from [Tuts+ Premium](https://tutsplus.com) course [Virtual Machines with Vagrant and Puppet](https://tutsplus.com/course/virtual-machines-with-vagrant-and-puppet/)
 
 ## Setup
 For this course, Virtual Box is used as the Vagrant provider.
@@ -558,6 +558,38 @@ Classes are not run by default. Need to tell vagrant to run it.
 
 Move contents of ```default.pp``` to new file ```webserver.pp```.
 
-One way to tell vagrant to run the class is to define it as a resource in ```default.pp```:
+One way to tell Vagrant to run the class is to define it as a resource in ```default.pp```:
   ```ruby
   class { "webserver": }
+  ```
+
+Another way to tell Vagrant to run the class, in ```default.pp```
+  ```ruby
+  import "webserver.pp"
+  include webserver
+  ```
+
+The include works because ```webserver.pp``` is located in the same ```manifests``` folder as ```default.pp```
+
+Classes can take parameters. For example, if we want to pass a message to index.html,
+with a default value of "Hello World". Providing a default value makes the parameter optional.
+
+  webserver.pp
+  ```ruby
+  class webserver ($message = "Hello World") {
+
+    # Use the message
+    file { '/vagrant/index.html':
+      content     => "<h1> Vagrant + Puppet + ${apache} (${operatingsystem})</h1> <p>${message}</p>",
+    }
+
+    # Rest of class contents...
+  }
+  ```
+
+  default.pp
+  ```ruby
+  class { "webserver":
+    message => "Hi there!",
+  }
+  ```
