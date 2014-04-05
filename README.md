@@ -45,6 +45,7 @@ For this course, Virtual Box is used as the Vagrant provider.
 - [Facter](#facter)
 - [Create custom facts](#create-custom-facts)
 - [Puppet Classes](#puppet-classes)
+- [Puppet Modules](#puppet-modules)
 
 ### Add a new box to collection of vagrant boxes
 vagrant box add <name> <location>
@@ -592,4 +593,41 @@ with a default value of "Hello World". Providing a default value makes the param
   class { "webserver":
     message => "Hi there!",
   }
+  ```
+
+### Puppet Modules
+A re-usable collection of Puppet manifests.
+[Puppet Forge](http://forge.puppetlabs.com/) is similar to npm, repository of modules developed by the Puppet community.
+
+Try [puppetlabs/apache](http://forge.puppetlabs.com/puppetlabs/apache) module. Will install and configure Apache.
+
+To install a module, need to run on LOCAL machine
+  ```bash
+  puppet module install puppetlabs/apache
+  ```
+
+To get started
+  ```bash
+  mkdir module-test && cd module-test
+  vagrant init precise32
+  ```
+
+Edit module-test/Vagrantfile
+  ```ruby
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+
+  # Tell Vagrant path on local computer where modules are installed
+  config.vm.provision :puppet do |puppet|
+    puppet.module_path = "/c/Users/Daniela/.puppet/modules"
+  end
+  ```
+
+Back in ```module-test``` dir
+  ```bash
+  mkdir manifests && cd manifests
+  touch default.pp
+  ```
+
+Edit ```default.pp```
+  ```ruby
   ```
